@@ -46,50 +46,6 @@ firstCrossroads = do
 goLeft = printWrap' "You went left!"
 goRight = printWrap' "You went right!"
 
--- String manipulation helpers.
--- ---------------------------------------------------------------------------
-
--- Remove leading and trailing whitespace from a String.
-strip :: String -> String
-strip = reverse . dropWhile isWhitespace . reverse . dropWhile isWhitespace
-    where isWhitespace = (`elem` [' ', '\t', '\n', '\r'])
-
--- Strip leading and trailing whitespace and make everything lowercase.
-normalize :: String -> String
-normalize = map toLower . strip
-
--- Wrap a String to fit the given width, adding line breaks as necessary.
--- This removes all pre-existing line breaks.
-wordWrap :: Int -> String -> String
-wordWrap width str
-  | length str' <= width = str'
-  | otherwise = take width str' ++ "\n" ++ drop width str'
-  where str' = filter notLineBreak str
-        notLineBreak = not . (`elem` "\n\r")
-
--- Output.
--- ---------------------------------------------------------------------------
-
--- Print a blank line.
-blankLine :: IO ()
-blankLine = putChar '\n'
-
--- Print a horizontal rule.
-hr :: Char -> Int -> IO ()
-hr char width = putStrLn (replicate width char) >> blankLine
-
--- Print a list of Strings line by line.
-printLines :: [String] -> IO ()
-printLines xs = mapM_ putStrLn xs >> blankLine
-
--- Print a String, wrapping its text to the given width.
-printWrap :: Int -> String -> IO ()
-printWrap width str = putStrLn (wordWrap width str) >> blankLine
-
--- Pause execution and wait for a keypress to continue.
-pause :: IO ()
-pause = putStr "<Press any key to continue...>" >> getChar >> return ()
-
 -- Control flow.
 -- ---------------------------------------------------------------------------
 
@@ -139,3 +95,47 @@ dispatch promptStr width caller disp msg = do putStr str
 -- Print a "try again" message and execute a given IO action.
 retry :: IO () -> IO ()
 retry action = putStrLn "Invalid input. Please try again." >> blankLine >> action
+
+-- Output.
+-- ---------------------------------------------------------------------------
+
+-- Print a blank line.
+blankLine :: IO ()
+blankLine = putChar '\n'
+
+-- Print a horizontal rule.
+hr :: Char -> Int -> IO ()
+hr char width = putStrLn (replicate width char) >> blankLine
+
+-- Print a list of Strings line by line.
+printLines :: [String] -> IO ()
+printLines xs = mapM_ putStrLn xs >> blankLine
+
+-- Print a String, wrapping its text to the given width.
+printWrap :: Int -> String -> IO ()
+printWrap width str = putStrLn (wordWrap width str) >> blankLine
+
+-- Pause execution and wait for a keypress to continue.
+pause :: IO ()
+pause = putStr "<Press any key to continue...>" >> getChar >> return ()
+
+-- String manipulation helpers.
+-- ---------------------------------------------------------------------------
+
+-- Remove leading and trailing whitespace from a String.
+strip :: String -> String
+strip = reverse . dropWhile isWhitespace . reverse . dropWhile isWhitespace
+    where isWhitespace = (`elem` [' ', '\t', '\n', '\r'])
+
+-- Strip leading and trailing whitespace and make everything lowercase.
+normalize :: String -> String
+normalize = map toLower . strip
+
+-- Wrap a String to fit the given width, adding line breaks as necessary.
+-- This removes all pre-existing line breaks.
+wordWrap :: Int -> String -> String
+wordWrap width str
+  | length str' <= width = str'
+  | otherwise = take width str' ++ "\n" ++ drop width str'
+  where str' = filter notLineBreak str
+        notLineBreak = not . (`elem` "\n\r")
