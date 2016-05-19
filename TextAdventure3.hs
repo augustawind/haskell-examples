@@ -12,82 +12,86 @@ data Adventure = End
                | Do Action Adventure
                | Prompt String Switch
 
+type Action = Options -> IO ()
 type Switch = Map.Map String Adventure
-type Action = IO ()
+
+data Options = Options { getPromptChars :: String
+                       , getTextWidth :: Int
+                       , getLineChar :: Char
+                       } deriving (Show, Read, Eq)
 
 -- Example usage.
 -- ---------------------------------------------------------------------------
 
-promptStr' = ">> "
-lineChar' = '-'
-textWidth' = 78
+main = run myOpts myAdventure
 
--- Customized functions:
+-- Options:
 
-hr' = hr lineChar' textWidth'
-printWrap' = printWrap textWidth'
-prompt' = prompt promptStr' textWidth'
-cmdPrompt' = cmdPrompt promptStr' textWidth'
+myOpts :: Options
+myOpts = Options { getPromptChars = ">> "
+                 , getTextWidth = 78
+                 , getLineChar = '-'
+                 }
 
 -- The adventure:
 
-main = run myAdventure
-
+myAdventure :: Adventure
 myAdventure =
     Do intro $
         Prompt "Which direction will you take?" $
             Map.fromList [("left", Do goLeft End), ("right", Do goRight End)]
 
-intro = do
+intro opts = do
     printLines ["You've decided to set out on an adventure."
                 ,"You've left your house and taken the path to a crossroads."]
 
-    name <- prompt' "What is your name?"
+    name <- prompt opts "What is your name?"
     
-    printWrap' ("Hello, %! Your adventure begins..." -%- [name])
+    printWrap opts ("Hello, %! Your adventure begins..." -%- [name])
     pause
 
-    hr'
+    hr opts
 
-goLeft = printWrap' "You went left!"
-goRight = printWrap' "You went right!"
+goLeft opts = printWrap opts "You went left!"
+goRight opts = printWrap opts "You went right!"
 
 -- Control flow.
 -- ---------------------------------------------------------------------------
 
 -- Run an Adventure.
-run :: Adventure -> IO ()
-run End = printWrap' "Game over!"
-run (Do action adventure) = action >> run adventure
-run this@(Prompt msg switch) = do
+run :: Options -> Adventure -> IO ()
+run opts End = printWrap opts "Game over!"
+run opts (Do action adventure) = action opts >> run opts adventure
+run opts this@(Prompt msg switch) = do
     let switch' = Map.mapKeys normalize switch
 
-    choice <- cmdPrompt ">> " 78 (Map.keys switch')
+    choice <- cmdPrompt opts (Map.keys switch') msg
     case Map.lookup choice switch' of
-      Nothing        -> retry (run this)
-      Just adventure -> run adventure
+      Nothing        -> retry (run opts this)
+      Just adventure -> run opts adventure
 
--- Same as prompt, but also takes a list of possible choices (`opts`) and
+-- Same as prompt, but also takes a list of possible choices and
 -- prints them, normalizing the input (see `normalize`).
-cmdPrompt :: String -> Int -> [String] -> String -> IO String
-cmdPrompt promptStr width opts msg = do putStr str
-                                        choice <- getLine
-                                        blankLine
-                                        return $ normalize choice
+cmdPrompt :: Options -> [String] -> String -> IO String
+cmdPrompt (Options promptStr width _) choices msg = do putStr str
+                                                       choice <- getLine
+                                                       blankLine
+                                                       return $ normalize choice
 
-   where str = wordWrap width msg ++ ('\n':optStr) ++ (' ':promptStr)
-         optStr = "(" ++ intercalate ", " opts ++ ")" 
+   where str = wordWrap width msg ++ ('\n':choicesStr) ++ (' ':promptStr)
+         choicesStr = "(" ++ intercalate ", " choices ++ ")" 
 
 -- Print something then prompt for input. 
-prompt :: String -> Int -> String -> IO String
-prompt promptString width message = do putStr str
-                                       answer <- fmap strip getLine
-                                       blankLine
-                                       return answer
-    where str = wordWrap width message ++ ('\n':promptString)
+prompt :: Options -> String -> IO String
+prompt (Options promptStr width _) message = do putStr str
+                                                answer <- fmap strip getLine
+                                                blankLine
+                                                return answer
+    where str = wordWrap width message ++ ('\n':promptStr)
+
 
 -- Print a "try again" message and execute a given IO action.
-retry :: Action -> Action
+retry :: IO () -> IO ()
 retry action = putStrLn "Invalid input. Please try again." >> blankLine >> action
 
 -- Pause execution and wait for a keypress to continue.
@@ -102,16 +106,16 @@ blankLine :: IO ()
 blankLine = putChar '\n'
 
 -- Print a horizontal rule.
-hr :: Char -> Int -> IO ()
-hr char width = putStrLn (replicate width char) >> blankLine
+hr :: Options -> IO ()
+hr (Options _ width char) = putStrLn (replicate width char) >> blankLine
 
 -- Print a list of Strings line by line.
 printLines :: [String] -> IO ()
 printLines xs = mapM_ putStrLn xs >> blankLine
 
 -- Print a String, wrapping its text to the given width.
-printWrap :: Int -> String -> IO ()
-printWrap width str = putStrLn (wordWrap width str) >> blankLine
+printWrap :: Options -> String -> IO ()
+printWrap opts str = putStrLn (wordWrap (getTextWidth opts) str) >> blankLine
 
 -- String manipulation helpers.
 -- ---------------------------------------------------------------------------
