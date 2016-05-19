@@ -8,7 +8,11 @@ import System.IO
 
 import StringFormat
 
-type Dispatcher = Map.Map String (IO ())
+
+
+data Adventure = End | Node Action Dispatcher
+type Dispatcher = Map.Map String Action
+type Action = IO ()
 
 -- Example usage.
 -- ---------------------------------------------------------------------------
@@ -77,7 +81,7 @@ cmdPrompt promptStr width opts msg = do putStr str
 -- Like prompt, but takes a Map mapping possible choices to IO actions and
 -- executes the action corresponding with the user's choice, or calls retry
 -- on the caller if an invalid option was given. Options are case-insensitive.
-dispatch :: String -> Int -> IO () -> Dispatcher -> String -> IO ()
+dispatch :: String -> Int -> Action -> Dispatcher -> String -> Action
 dispatch promptStr width caller disp msg = do putStr str
                                               choice <- getLine
                                               blankLine
@@ -93,7 +97,7 @@ dispatch promptStr width caller disp msg = do putStr str
          optStr = "(" ++ intercalate ", " (Map.keys disp') ++ ")" 
 
 -- Print a "try again" message and execute a given IO action.
-retry :: IO () -> IO ()
+retry :: Action -> Action
 retry action = putStrLn "Invalid input. Please try again." >> blankLine >> action
 
 -- Pause execution and wait for a keypress to continue.
