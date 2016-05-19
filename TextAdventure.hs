@@ -96,6 +96,10 @@ dispatch promptStr width caller disp msg = do putStr str
 retry :: IO () -> IO ()
 retry action = putStrLn "Invalid input. Please try again." >> blankLine >> action
 
+-- Pause execution and wait for a keypress to continue.
+pause :: IO ()
+pause = putStr "<Press any key to continue...>" >> getChar >> return ()
+
 -- Output.
 -- ---------------------------------------------------------------------------
 
@@ -114,10 +118,6 @@ printLines xs = mapM_ putStrLn xs >> blankLine
 -- Print a String, wrapping its text to the given width.
 printWrap :: Int -> String -> IO ()
 printWrap width str = putStrLn (wordWrap width str) >> blankLine
-
--- Pause execution and wait for a keypress to continue.
-pause :: IO ()
-pause = putStr "<Press any key to continue...>" >> getChar >> return ()
 
 -- String manipulation helpers.
 -- ---------------------------------------------------------------------------
