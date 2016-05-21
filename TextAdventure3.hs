@@ -15,10 +15,13 @@ data Adventure = End
 type Action = Options -> IO ()
 type Switch = Map.Map String Adventure
 
-data Options = Options { getPromptChars :: String
+data Options = Options { getVars :: Vars
+                       , getPromptChars :: String
                        , getTextWidth :: Int
                        , getLineChar :: Char
                        } deriving (Show, Read, Eq)
+
+type Vars = Map.Map String String
 
 -- Example usage.
 -- ---------------------------------------------------------------------------
@@ -28,10 +31,7 @@ main = run myOpts myAdventure
 -- Options:
 
 myOpts :: Options
-myOpts = Options { getPromptChars = ">> "
-                 , getTextWidth = 78
-                 , getLineChar = '-'
-                 }
+myOpts = defaultOptions
 
 -- Adventure:
 
@@ -104,6 +104,14 @@ pause = putStr "<Press any key to continue...>" >> getChar >> return ()
 
 -- Output.
 -- ---------------------------------------------------------------------------
+
+-- Default options.
+defaultOptions = Options
+    { getVars = Map.empty
+    , getPromptChars = ">> "
+    , getTextWidth = 78
+    , getLineChar = '-'
+    }
 
 -- Print a blank line.
 blankLine :: IO ()
