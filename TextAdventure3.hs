@@ -33,7 +33,7 @@ myOpts = Options { getPromptChars = ">> "
                  , getLineChar = '-'
                  }
 
--- The adventure:
+-- Adventure:
 
 myAdventure :: Adventure
 myAdventure =
@@ -73,21 +73,25 @@ run opts this@(Prompt msg switch) = do
 -- Same as prompt, but also takes a list of possible choices and
 -- prints them, normalizing the input (see `normalize`).
 cmdPrompt :: Options -> [String] -> String -> IO String
-cmdPrompt (Options promptStr width _) choices msg = do putStr str
-                                                       choice <- getLine
-                                                       blankLine
-                                                       return $ normalize choice
+cmdPrompt opts choices msg = do putStr str
+                                choice <- getLine
+                                blankLine
+                                return $ normalize choice
 
-   where str = wordWrap width msg ++ ('\n':choicesStr) ++ (' ':promptStr)
+   where str = wordWrap width msg ++ ('\n':choicesStr) ++ (' ':promptChars)
          choicesStr = "(" ++ intercalate ", " choices ++ ")" 
+         width = getTextWidth opts
+         promptChars = getPromptChars opts
 
 -- Print something then prompt for input. 
 prompt :: Options -> String -> IO String
-prompt (Options promptStr width _) message = do putStr str
-                                                answer <- fmap strip getLine
-                                                blankLine
-                                                return answer
-    where str = wordWrap width message ++ ('\n':promptStr)
+prompt opts message = do putStr str
+                         answer <- fmap strip getLine
+                         blankLine
+                         return answer
+    where str = wordWrap width message ++ ('\n':promptChars)
+          width = getTextWidth opts
+          promptChars = getPromptChars opts
 
 
 -- Print a "try again" message and execute a given IO action.
@@ -107,7 +111,9 @@ blankLine = putChar '\n'
 
 -- Print a horizontal rule.
 hr :: Options -> IO ()
-hr (Options _ width char) = putStrLn (replicate width char) >> blankLine
+hr opts = putStrLn (replicate width char) >> blankLine
+    where width = getTextWidth opts
+          char = getLineChar opts
 
 -- Print a list of Strings line by line.
 printLines :: [String] -> IO ()
