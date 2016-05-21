@@ -148,6 +148,6 @@ normalize = map toLower . strip
 wordWrap :: Int -> String -> String
 wordWrap width str
   | length str' <= width = str'
-  | otherwise = take width str' ++ "\n" ++ wordWrap (drop width str')
+  | otherwise = take width str' ++ "\n" ++ wordWrap width (drop width str')
   where str' = filter notLineBreak str
         notLineBreak = not . (`elem` "\n\r")
